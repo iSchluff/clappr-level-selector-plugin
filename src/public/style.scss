@@ -1,6 +1,6 @@
 .level_selector[data-level-selector] {
   float: right;
-  margin-top: 5px;
+  margin-top: 7px;
   position: relative;
 
   button {
@@ -9,7 +9,7 @@
     font-family: Roboto,"Open Sans",Arial,sans-serif;
     -webkit-font-smoothing: antialiased;
     border: none;
-    font-size: 10px;
+    font-size: 12px;
 
     &:hover {
       color: #c9c9c9;
@@ -30,7 +30,7 @@
   }
 
   li {
-    font-size: 10px;
+    font-size: 12px;
 
     &[data-title] {
       background-color: #c3c2c2;
@@ -57,6 +57,9 @@
       color: #f00;
     }
 
+    &.hidden {
+      display: none;
+    }
   }
 }
 
