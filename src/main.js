@@ -38,21 +38,17 @@ export default class LevelSelector extends UICorePlugin {
     this.stopListening(this.core.mediaControl, Events.MEDIACONTROL_RENDERED)
     this.stopListening(this.core.mediaControl, Events.MEDIACONTROL_HIDE)
     this.stopListening(this.core.getCurrentPlayback(), Events.PLAYBACK_LEVELS_AVAILABLE)
-    this.stopListening(this.core.getCurrentPlayback(), Events.PLAYBACK_LEVEL_SWITCH_START)
-    this.stopListening(this.core.getCurrentPlayback(), Events.PLAYBACK_LEVEL_SWITCH_END)
     this.stopListening(this.core.getCurrentPlayback(), Events.PLAYBACK_BITRATE)
   }
 
   bindPlaybackEvents() {
-      var currentPlayback = this.core.getCurrentPlayback()
+    var currentPlayback = this.core.getCurrentPlayback()
 
-      this.listenTo(currentPlayback, Events.PLAYBACK_LEVELS_AVAILABLE, this.fillLevels)
-      this.listenTo(currentPlayback, Events.PLAYBACK_LEVEL_SWITCH_START, this.startLevelSwitch)
-      this.listenTo(currentPlayback, Events.PLAYBACK_LEVEL_SWITCH_END, this.stopLevelSwitch)
-      this.listenTo(currentPlayback, Events.PLAYBACK_BITRATE, this.updateCurrentLevel)
+    this.listenTo(currentPlayback, Events.PLAYBACK_LEVELS_AVAILABLE, this.fillLevels)
+    this.listenTo(currentPlayback, Events.PLAYBACK_BITRATE, this.handleAdaptation)
 
-      var playbackLevelsAvaialbeWasTriggered = currentPlayback.levels && currentPlayback.levels.length > 0
-      playbackLevelsAvaialbeWasTriggered && this.fillLevels(currentPlayback.levels)
+    var playbackLevelsAvailableWasTriggered = currentPlayback.levels && currentPlayback.levels.length > 0
+    playbackLevelsAvailableWasTriggered && this.fillLevels(currentPlayback.levels)
   }
 
   reload() {
@@ -78,7 +74,7 @@ export default class LevelSelector extends UICorePlugin {
     if (this.shouldRender()) {
       var style = Styler.getStyleFor(pluginStyle, {baseUrl: this.core.options.baseUrl})
 
-      this.$el.html(this.template({'levels':this.levels, 'title': this.getTitle()}))
+      this.$el.html(this.template({'levels': this.levels, 'title': this.getTitle()}))
       this.$el.append(style)
       this.core.mediaControl.$('.media-control-right-panel').append(this.el)
       this.highlightCurrentLevel()
@@ -87,40 +83,40 @@ export default class LevelSelector extends UICorePlugin {
   }
 
   fillLevels(levels, initialLevel = AUTO) {
-    if (this.selectedLevelId === undefined) this.selectedLevelId = initialLevel
-    this.levels = levels
+    if (this.selectedLevelId === undefined) this.selectedLevelId = initialLevel;
+
+    this.levels = levels;
     this.configureLevelsLabels()
     this.render()
   }
 
   configureLevelsLabels() {
-    if (this.core.options.levelSelectorConfig === undefined) return
+    // set default labels
+    this.levels.forEach((level) => {
+      level.label = `${level.height}p`;
+    });
+
+    if (this.core.options.levelSelectorConfig === undefined)
+      return
 
     var labelCallback = this.core.options.levelSelectorConfig.labelCallback
-    if(labelCallback && typeof labelCallback !== 'function')
-    {
-        throw new TypeError('labelCallback must be a function')
-    }
-    
+    if (labelCallback && typeof labelCallback !== 'function')
+      throw new TypeError('labelCallback must be a function')
+
     var hasLabels = this.core.options.levelSelectorConfig.labels
     var labels = hasLabels ? this.core.options.levelSelectorConfig.labels : {};
-    
-    if(labelCallback || hasLabels)
-    {
-        var level
-        var label
-        for(var levelId in this.levels) {
-            level = this.levels[levelId]
-            label = labels[level.id] 
-            if(labelCallback)
-            {
-                level.label = labelCallback(level,label)
-            }
-            else if(label)
-            {
-                level.label = label
-            }
+
+    if (labelCallback || hasLabels) {
+      var level, label;
+      for (var levelId in this.levels) {
+        level = this.levels[levelId]
+        label = labels[level.id]
+        if (labelCallback) {
+          level.label = labelCallback(level,label)
+        } else if(label) {
+          level.label = label
         }
+      }
     }
   }
 
@@ -153,10 +149,6 @@ export default class LevelSelector extends UICorePlugin {
 
   getTitle() { return (this.core.options.levelSelectorConfig || {}).title }
 
-  startLevelSwitch() { this.buttonElement().addClass('changing') }
-
-  stopLevelSwitch() { this.buttonElement().removeClass('changing') }
-
   updateText(level) {
     if (level === AUTO) {
       this.buttonElement().text(this.currentLevel ? 'AUTO (' + this.currentLevel.label + ')' : 'AUTO')
@@ -165,14 +157,29 @@ export default class LevelSelector extends UICorePlugin {
       this.buttonElement().text(this.findLevelBy(level).label)
     }
   }
-  updateCurrentLevel(info) {
+
+  handleAdaptation(info) {
     var level = this.findLevelBy(info.level)
     this.currentLevel = level ? level : null
     this.highlightCurrentLevel()
   }
+
   highlightCurrentLevel() {
+    // update title text
+    this.updateText(this.selectedLevelId)
+
+    // update current level
     this.levelElement().removeClass('current')
     this.currentLevel && this.levelElement(this.currentLevel.id).addClass('current')
-    this.updateText(this.selectedLevelId)
+
+    // hide levels with other languages
+    var currentLanguage = this.currentLevel && this.currentLevel.language;
+    if (currentLanguage) {
+      this.levelElement().removeClass('hidden')
+      this.levels.forEach((level) => {
+        if (level.language != currentLanguage)
+          this.levelElement(level.id).addClass('hidden')
+      })
+    }
   }
 }
