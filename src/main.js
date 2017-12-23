@@ -93,7 +93,7 @@ export default class LevelSelector extends UICorePlugin {
   configureLevelsLabels() {
     // set default labels
     this.levels.forEach((level) => {
-      level.label = `${level.height}p`;
+      level.label = `${level.height ? level.height : level.level.height}p`;
     });
 
     if (this.core.options.levelSelectorConfig === undefined)
