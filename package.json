@@ -1,5 +1,5 @@
 {
-  "name": "level-selector",
+  "name": "@c3voc/clappr-level-selector",
   "description": "A simple plugin for Clappr that adds support to manually select level on multi-bitrate streams.",
   "version": "0.1.10",
   "license": "MIT",
