@@ -1,46 +1,48 @@
-var path = require('path');
-var webpack = require('webpack');
-var filename = 'level-selector.js'
+const path = require('path');
+const filename = 'level-selector.js'
 
 module.exports = {
-  entry: path.resolve(__dirname, 'index.js'),
+  entry: path.resolve(__dirname, 'src/main.js'),
   externals: {
-    "Clappr": "Clappr",
-    "clappr-zepto": "clappr-zepto"
+    clappr: {
+      amd: 'clappr',
+      commonjs: 'clappr',
+      commonjs2: 'clappr',
+      root: 'Clappr'
+    }
   },
   module: {
-    loaders: [
-      {
-        test: /\.js$/,
-        loader: 'babel',
-        query: {
-            compact: true,
-        }
-      },
-      {
-        test: /\.scss$/,
-        loaders: ['css', 'sass?includePaths[]='
-          + path.resolve(__dirname, './node_modules/compass-mixins/lib')
-          + '&includePaths[]='
-          + path.resolve(__dirname, './node_modules/clappr/src/base/scss')
-          + '&includePaths[]='
-          + path.resolve(__dirname, './src/base/scss')
-        ],
-        include: path.resolve(__dirname, 'src'),
-      },
-      {
-        test: /\.html/, loader: 'html?minimize=false'
-      },
-    ],
+    rules: [{
+      test: /\.js$/,
+      loader: 'babel-loader',
+      query: {
+          compact: true,
+      }
+    }, {
+      test: /\.s[ac]ss$/i,
+      use: [
+        // Translates CSS into CommonJS
+        'css-loader',
+        // Compiles Sass to CSS
+        'sass-loader',
+      ],
+      include: path.resolve(__dirname, 'src'),
+    }, {
+      test: /\.html$/,
+      loader: 'html-loader',
+      options: {
+        minimize: false
+      }
+    }],
   },
   resolve: {
-    extensions: ['', '.js'],
+    extensions: ['.js'],
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '<%=baseUrl%>/',
     filename: filename,
     library: 'LevelSelector',
+    libraryExport: 'default',
     libraryTarget: 'umd',
   },
 };
