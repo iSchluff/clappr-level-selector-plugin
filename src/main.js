@@ -184,5 +184,15 @@ export default class LevelSelector extends UICorePlugin {
     this.levelElement().removeClass('current')
     this.currentLevel && this.levelElement(this.currentLevel.id).addClass('current')
     this.updateText(this.selectedLevelId)
+
+    // hide levels with other languages
+    const currentLanguage = this.currentLevel && this.currentLevel.language;
+    if (currentLanguage) {
+      this.levelElement().removeClass('hidden')
+      this.levels.forEach((level) => {
+        if (level.language != currentLanguage)
+          this.levelElement(level.id).addClass('hidden')
+      })
+    }
   }
 }
